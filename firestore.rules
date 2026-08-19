@@ -1,159 +1,49 @@
 rules_version = '2';
-
 service cloud.firestore {
   match /databases/{database}/documents {
-
-    function signedIn() {
-      return request.auth != null;
-    }
-
-    function adminDoc() {
-      return /databases/$(database)/documents/users/$(request.auth.uid);
-    }
-
-    function isAdmin() {
-      return signedIn()
-        && exists(adminDoc())
-        && get(adminDoc()).data.role == 'admin';
-    }
-
-    function validCategory(v) {
-      return v in [
-        'rings',
-        'chains',
-        'bracelets',
-        'accessories'
-      ];
-    }
+    function signedIn() { return request.auth != null; }
+    function adminDoc() { return /databases/$(database)/documents/users/$(request.auth.uid); }
+    function isAdmin() { return signedIn() && exists(adminDoc()) && get(adminDoc()).data.role == 'admin'; }
+    function validCategory(v) { return v in ['rings','chains','bracelets','accessories']; }
 
     function validProduct(d) {
       return d.keys().hasOnly([
-        'nameAr',
-        'nameEn',
-        'descAr',
-        'descEn',
-        'price',
-        'oldPrice',
-        'category',
-        'image',
-        'featured',
-        'isNew',
-        'onSale',
-        'active',
-        'stock',
-        'sku',
-        'material',
-        'karat',
-        'sizes',
-        'weight',
-        'createdAt',
-        'updatedAt'
+        'nameAr','nameEn','descAr','descEn','price','oldPrice','category','image','images',
+        'featured','isNew','onSale','active','stock','sku','material','karat','sizes',
+        'weight','createdAt','updatedAt'
       ])
-
-      && d.nameAr is string
-      && d.nameAr.size() > 0
-      && d.nameAr.size() <= 120
-
-      && d.nameEn is string
-      && d.nameEn.size() > 0
-      && d.nameEn.size() <= 120
-
-      && d.descAr is string
-      && d.descAr.size() <= 1200
-
-      && d.descEn is string
-      && d.descEn.size() <= 1200
-
-      && d.price is number
-      && d.price >= 0
-      && d.price <= 10000000
-
-      && d.oldPrice is number
-      && d.oldPrice >= 0
-      && d.oldPrice <= 10000000
+      && d.nameAr is string && d.nameAr.size() > 0 && d.nameAr.size() <= 120
+      && d.nameEn is string && d.nameEn.size() > 0 && d.nameEn.size() <= 120
+      && d.descAr is string && d.descAr.size() <= 1200
+      && d.descEn is string && d.descEn.size() <= 1200
+      && d.price is number && d.price >= 0 && d.price <= 10000000
+      && d.oldPrice is number && d.oldPrice >= 0 && d.oldPrice <= 10000000
       && (d.oldPrice == 0 || d.oldPrice >= d.price)
-
       && validCategory(d.category)
-
-      && d.image is string
-      && d.image.size() <= 1500
-
-      && d.featured is bool
-      && d.isNew is bool
-      && d.onSale is bool
-      && d.active is bool
-
-      && d.stock is int
-      && d.stock >= 0
-      && d.stock <= 100000
-
-      && d.sku is string
-      && d.sku.size() <= 80
-
-      && d.material is string
-      && d.material.size() <= 120
-
-      && d.karat is string
-      && d.karat.size() > 0
-      && d.karat.size() <= 20
-
-      && d.sizes is list
-      && d.sizes.size() <= 30
-
-      && d.weight is number
-      && d.weight >= 0
-      && d.weight <= 100000
-
+      && d.image is string && d.image.size() > 0 && d.image.size() <= 1500
+      && d.images is list && d.images.size() >= 1 && d.images.size() <= 8
+      && d.featured is bool && d.isNew is bool && d.onSale is bool && d.active is bool
+      && d.stock is int && d.stock >= 0 && d.stock <= 100000
+      && d.sku is string && d.sku.size() <= 80
+      && d.material is string && d.material.size() <= 120
+      && d.karat is string && d.karat.size() > 0 && d.karat.size() <= 20
+      && d.sizes is list && d.sizes.size() <= 30
+      && d.weight is number && d.weight >= 0 && d.weight <= 100000
       && d.createdAt is timestamp
       && d.updatedAt is timestamp;
     }
 
-
-    // =========================
-    // PRODUCTS
-    // =========================
-
     match /products/{productId} {
-
-      // العميل يستطيع فقط قراءة المنتجات الظاهرة.
-      // لوحة الإدارة تستطيع قراءة جميع المنتجات.
-      allow read:
-        if resource.data.active == true
-        || isAdmin();
-
-      // إضافة أو تعديل المنتجات للـ Admin فقط.
-      allow create, update:
-        if isAdmin()
-        && validProduct(request.resource.data);
-
-      // حذف المنتجات للـ Admin فقط.
-      allow delete:
-        if isAdmin();
+      allow read: if resource.data.active == true || isAdmin();
+      allow create, update: if isAdmin() && validProduct(request.resource.data);
+      allow delete: if isAdmin();
     }
 
-
-    // =========================
-    // ADMIN USERS
-    // =========================
-
     match /users/{userId} {
-
-      // المستخدم المسجل يستطيع قراءة ملفه فقط.
-      allow read:
-        if signedIn()
-        && request.auth.uid == userId;
-
-      // ممنوع إنشاء أو تغيير Role من المتصفح.
+      allow read: if signedIn() && request.auth.uid == userId;
       allow create, update, delete: if false;
     }
 
-
-    // =========================
-    // BLOCK EVERYTHING ELSE
-    // =========================
-
-    match /{document=**} {
-      allow read, write: if false;
-    }
+    match /{document=**} { allow read, write: if false; }
   }
 }

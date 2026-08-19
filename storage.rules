@@ -1,20 +1,8 @@
 rules_version = '2';
 service firebase.storage {
   match /b/{bucket}/o {
-    function isAdmin() {
-      return request.auth != null &&
-        firestore.exists(/databases/(default)/documents/users/$(request.auth.uid)) &&
-        firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'admin';
-    }
-
-    match /products/{fileName} {
-      allow read: if true;
-      allow create, update: if isAdmin()
-        && request.resource.size < 5 * 1024 * 1024
-        && request.resource.contentType.matches('image/(jpeg|png|webp)');
-      allow delete: if isAdmin();
-    }
-
+    // Firebase Storage is intentionally disabled in this build.
+    // Product images are delivered from ImageKit and only their URLs are stored in Firestore.
     match /{allPaths=**} { allow read, write: if false; }
   }
 }

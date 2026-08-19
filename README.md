@@ -1,53 +1,58 @@
-# فضيات البطريق — Penguin Silver
+# فضيات البطريق — Penguin Silver V4
 
-متجر فضيات عربي/إنجليزي متجاوب بالكامل، يعمل للزوار بدون حساب، مع لوحة إدارة منفصلة ومحمية بواسطة Firebase Authentication + Firestore Security Rules.
+نسخة تحديث كاملة لمتجر GitHub Pages + Firebase، مع تصميم أسود/أصفر، واجهة موبايل أقرب للتطبيق، ولوجو جديد، ودعم عدة صور لكل منتج باستخدام روابط ImageKit.
 
-## أهم ما في النسخة الحالية
+## رفع التحديث على GitHub
 
-- شعار فضيات البطريق مدمج في الهيدر والواجهة ولوحة الإدارة.
-- رقم التواصل وWhatsApp: `+201207800721`.
-- زر WhatsApp ثابت في جميع صفحات المتجر.
-- كل منتج يحتوي على: السعر، الوزن بالجرام، العيار، المخزون، SKU، المقاسات، الخامة، الصور، الخصم والتصنيف.
-- الدفع يعرض محفظة كاش على الرقم `+201207800721` مع خيار الدفع عند الاستلام، ثم يتم إرسال الطلب كاملًا على WhatsApp.
-- العملاء لا يسجلون حسابات.
-- لوحة الإدارة فقط تستخدم Firebase Authentication.
-- قواعد Firestore تمنع أي زائر من تعديل المنتجات أو صلاحيات الإدارة.
-- قواعد Storage تمنع رفع الملفات إلا للـ Admin، وتسمح فقط JPG/PNG/WebP حتى 5MB.
-- Content Security Policy وإعدادات Referrer موجودة في صفحات المتجر والإدارة.
+ارفع **محتويات هذا المجلد** إلى جذر Repository `penguin-silver-store` مع استبدال الملفات القديمة، ثم Commit على `main`.
 
-## ملفات المشروع
+## مهم جدًا: Firestore Rules
 
-- `index.html` واجهة المتجر.
-- `app.js` منطق المنتجات والسلة والطلب واللغات.
-- `styles.css` تصميم المتجر Responsive.
-- `admin.html` لوحة الإدارة.
-- `admin.js` إدارة المنتجات والصور.
-- `firebase-config.js` إعدادات Firebase ورقم المتجر.
-- `firestore.rules` قواعد حماية قاعدة البيانات.
-- `storage.rules` قواعد حماية الصور.
-- `assets/logo.png` شعار المتجر.
+ملف `firestore.rules` في GitHub لا يُنشر تلقائيًا إلى Firebase Console. بعد رفع الملفات:
 
-## إعداد Firebase
+1. Firebase Console → Firestore Database → Rules.
+2. انسخ محتوى `firestore.rules` بالكامل.
+3. Replace للكود الحالي ثم Publish.
 
-1. أنشئ Firebase Project.
-2. فعّل **Authentication > Email/Password** وأنشئ حساب Admin قويًا.
-3. أنشئ **Cloud Firestore** في Production mode.
-4. أنشئ **Storage**.
-5. أنشئ Web App وانسخ إعدادات Firebase إلى `firebase-config.js`.
-6. من Firestore Console أنشئ document في `users` باسم UID الخاص بحساب الإدارة، وأضف field: `role = admin`.
-7. انشر `firestore.rules` و `storage.rules` الموجودة في المشروع.
-8. فعّل **Firebase App Check** للموقع وأضف site key إلى `appCheckSiteKey` ثم فعّل enforcement لخدمات Firestore/Storage المدعومة من Firebase Console.
-9. أضف دومين GitHub Pages أو الدومين المخصص إلى **Authentication > Settings > Authorized domains**.
+بدون الخطوة دي، لوحة الإدارة قد ترفض حفظ المنتجات الجديدة لأن المنتج أصبح يحتوي حقل `images`.
 
-## تنبيهات أمان مهمة
+## ImageKit
 
-- لا تجعل Firestore Rules أو Storage Rules بصيغة `allow read, write: if true`.
-- لا تضع كلمة مرور المدير داخل HTML أو JavaScript.
-- Firebase Web API key ظاهر بطبيعته في المتصفح؛ الحماية تعتمد على Security Rules وApp Check وصلاحيات المستخدمين.
-- استخدم كلمة مرور Admin طويلة وفريدة وفعّل MFA لحساب Google/Firebase الذي يدير المشروع.
-- راجع Firebase Usage وAuthentication logs دوريًا.
-- GitHub Pages موقع static؛ للمدفوعات البنكية/بطاقات الائتمان استخدم مزود دفع رسمي مع Backend/Cloud Functions ولا تخزن بيانات البطاقات داخل الموقع.
+Endpoint الحالي محفوظ في `firebase-config.js`:
 
-## GitHub Pages
+`https://ik.imagekit.io/hgogt2pg1`
 
-ارفع محتويات مجلد المشروع إلى Repository، ثم من `Settings > Pages` اختر Deploy from branch وحدد `main` و `/root`.
+في لوحة الإدارة، أضف من 1 إلى 8 روابط HTTPS، **كل رابط في سطر منفصل**. أول رابط هو الصورة الرئيسية.
+
+مثال:
+
+- `https://ik.imagekit.io/hgogt2pg1/Black%20ring/golden-wedding-rings-with-diamonds-vma-111%20(1).jpg?updatedAt=1787154553349`
+- `https://ik.imagekit.io/hgogt2pg1/Black%20ring/golden-wedding-rings-with-diamonds-vma-111.jpg?updatedAt=1787154553253`
+- `https://ik.imagekit.io/hgogt2pg1/Black%20ring/golden-wedding-rings-with-diamonds-vma-111%20(2).jpg?updatedAt=1787154553214`
+
+لا يوجد Private Key لـ ImageKit داخل المشروع، ولا يجب إضافته إلى GitHub.
+
+## التوافق مع المنتجات القديمة
+
+المتجر يستطيع قراءة المنتج القديم الذي يحتوي `image` فقط. عند تعديل المنتج من لوحة الإدارة الجديدة وحفظه، سيتم تخزين `image` للصورة الرئيسية و`images` لمعرض الصور.
+
+## تغييرات V4
+
+- لوجو جديد مستخرج بخلفية شفافة من الملف المرسل.
+- هوية Black + Yellow.
+- Bottom navigation ثابتة على الموبايل: الرئيسية / الأقسام / البحث / السلة.
+- Product gallery: thumbnails + أسهم + swipe على الموبايل.
+- السعر + الوزن + العيار ظاهرين على بطاقة المنتج.
+- دعم حتى 8 صور للمنتج.
+- محفظة كاش مرتبطة بالرقم `+201207800721` في Checkout.
+- زر WhatsApp ثابت.
+- Firebase Storage غير مستخدم.
+- Authentication للـ Admin فقط.
+
+## الروابط
+
+المتجر:
+`https://moamenmoa.github.io/penguin-silver-store/`
+
+لوحة الإدارة:
+`https://moamenmoa.github.io/penguin-silver-store/admin.html`

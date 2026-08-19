@@ -1,4 +1,4 @@
-// Public Firebase Web configuration. These values are not secrets; access is protected by Firebase Security Rules.
+// Firebase Web config is public by design. Security is enforced by Firebase Auth + Firestore Rules.
 export const firebaseConfig = {
   apiKey: "AIzaSyDG0SKgjL5brawM0thEKZaAuQJU2YGkows",
   authDomain: "penguin-silver-store.firebaseapp.com",
@@ -13,5 +13,6 @@ export const storeSettings = {
   currency: "EGP",
   storePhone: "+201207800721",
   cashWalletNumber: "+201207800721",
+  imageKitEndpoint: "https://ik.imagekit.io/hgogt2pg1",
   appCheckSiteKey: ""
 };
