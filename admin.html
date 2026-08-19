@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex,nofollow,noarchive" />
+  <meta name="referrer" content="no-referrer" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com/recaptcha/; style-src 'self'; img-src 'self' data: blob: https://firebasestorage.googleapis.com https://*.googleusercontent.com https:; connect-src 'self' https://www.google.com/recaptcha/ https://*.googleapis.com https://*.firebaseio.com https://firebasestorage.googleapis.com wss://*.firebaseio.com https://www.gstatic.com; object-src 'none'; base-uri 'self'; form-action 'none'; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; upgrade-insecure-requests">
+  <title>إدارة فضيات البطريق</title>
+  <link rel="icon" href="assets/logo.png" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="admin-body">
+  <section id="loginView" class="login-wrap">
+    <form id="loginForm" class="login-card" autocomplete="on">
+      <img class="admin-logo" src="assets/logo.png" alt="فضيات البطريق" />
+      <h1>لوحة الإدارة</h1><p>الدخول مخصص لمدير المتجر فقط.</p>
+      <div class="field"><label for="email">البريد الإلكتروني</label><input id="email" type="email" maxlength="160" required autocomplete="username"></div>
+      <div class="field"><label for="password">كلمة المرور</label><input id="password" type="password" minlength="8" maxlength="128" required autocomplete="current-password"></div>
+      <button class="primary-btn full" type="submit">دخول</button><div id="loginStatus" class="status" aria-live="polite"></div>
+    </form>
+  </section>
+
+  <section id="adminView" class="admin-hidden">
+    <div class="admin-shell">
+      <aside class="sidebar">
+        <a class="brand" href="index.html"><img class="brand-logo" src="assets/logo.png" alt=""><div class="brand-copy"><strong>فضيات البطريق</strong><span>Admin Panel</span></div></a>
+        <nav class="side-nav"><button class="active" type="button">المنتجات</button><button id="openStore" type="button">فتح المتجر</button><button id="logoutBtn" type="button">تسجيل الخروج</button></nav>
+      </aside>
+      <main class="admin-main">
+        <div class="admin-top"><div><span class="eyebrow">Penguin Silver</span><h1>إدارة المنتجات</h1></div><div class="admin-mobile-actions"><button id="logoutMobile" class="secondary-btn" type="button">خروج</button></div></div>
+        <div class="admin-grid">
+          <section class="panel">
+            <h2 id="formTitle">إضافة منتج</h2>
+            <form id="productForm" class="form-grid">
+              <input id="productId" type="hidden">
+              <div class="field"><label>اسم المنتج بالعربي</label><input id="nameAr" maxlength="120" required></div>
+              <div class="field"><label>Product name in English</label><input id="nameEn" maxlength="120" required></div>
+              <div class="field full"><label>الوصف بالعربي</label><textarea id="descAr" maxlength="1200"></textarea></div>
+              <div class="field full"><label>Description in English</label><textarea id="descEn" maxlength="1200"></textarea></div>
+              <div class="field"><label>السعر (EGP)</label><input id="price" type="number" min="0" max="10000000" step="0.01" required></div>
+              <div class="field"><label>السعر قبل الخصم</label><input id="oldPrice" type="number" min="0" max="10000000" step="0.01" value="0"></div>
+              <div class="field"><label>الوزن بالجرام</label><input id="weight" type="number" min="0" max="100000" step="0.01" value="0" required></div>
+              <div class="field"><label>العيار</label><input id="karat" maxlength="20" value="925" placeholder="925" required><small>مثال: 925 أو 900 أو 800.</small></div>
+              <div class="field"><label>المخزون</label><input id="stock" type="number" min="0" max="100000" step="1" value="1" required></div>
+              <div class="field"><label>SKU / كود المنتج</label><input id="sku" maxlength="80" placeholder="PS-R001"></div>
+              <div class="field"><label>التصنيف</label><select id="category"><option value="rings">خواتم</option><option value="chains">سلاسل</option><option value="bracelets">أساور</option><option value="accessories">إكسسوارات</option></select></div>
+              <div class="field"><label>الخامة</label><input id="material" maxlength="120" value="Sterling Silver"></div>
+              <div class="field full"><label>المقاسات</label><input id="sizes" maxlength="300" placeholder="17, 18, 19 أو 45 cm, 50 cm"><small>افصل المقاسات بفاصلة.</small></div>
+              <div class="field full"><label>صورة المنتج</label><input id="imageFile" type="file" accept="image/jpeg,image/png,image/webp"><input id="imageUrl" type="url" maxlength="1500" placeholder="أو رابط صورة HTTPS خارجي"><small>الحد الأقصى 5MB. الأفضل WebP أو JPG.</small></div>
+              <div class="field full check-row"><label><input id="featured" type="checkbox"> منتج مميز</label><label><input id="isNew" type="checkbox"> جديد</label><label><input id="onSale" type="checkbox"> عليه عرض</label><label><input id="active" type="checkbox" checked> ظاهر في المتجر</label></div>
+              <div class="field full"><button class="primary-btn" type="submit">حفظ المنتج</button> <button id="cancelEdit" class="secondary-btn" type="button">إلغاء التعديل</button><div id="formStatus" class="status" aria-live="polite"></div></div>
+            </form>
+          </section>
+          <section class="panel"><div class="panel-title-row"><h2>المنتجات الحالية</h2><input id="adminSearch" type="search" maxlength="80" placeholder="بحث بالاسم أو SKU"></div><div id="adminProducts" class="admin-products"><div class="empty-state">جاري التحميل...</div></div></section>
+        </div>
+      </main>
+    </div>
+  </section>
+  <script type="module" src="admin.js"></script>
+</body>
+</html>
