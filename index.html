@@ -27,7 +27,7 @@
       </nav>
       <div class="nav-actions">
         <button id="langBtn" class="ghost-btn" type="button">EN</button>
-        <button id="cartBtn" class="cart-button" type="button">🛍 <span id="cartCount">0</span></button>
+        <button aria-label="فتح سلة التسوق" id="cartBtn" class="cart-button" type="button">🛍 <span id="cartCount">0</span></button>
       </div>
     </div>
   </header>
@@ -37,16 +37,16 @@
       <div class="container hero-grid">
         <div class="hero-copy">
           <span class="eyebrow" data-i18n="eyebrow">اختيارات فضة بتفاصيل واضحة</span>
-          <h1 data-i18n="heroTitle">فضة بتفاصيل تليق بك<br><mark>أناقة في كل اختيار.</mark></h1>
+          <h1 data-i18n="heroTitle">فضة تكمّل أناقتك…<br><mark>تفاصيل تليق بيك وبيكي.</mark></h1>
           <p data-i18n="heroDesc">اكتشف تشكيلتنا من الخواتم والسلاسل والأساور والإكسسوارات الفضية بتصميمات مختارة لكل ستايل.</p>
           <div class="hero-actions">
             <a class="primary-btn" href="#products" data-i18n="shopNow">شوف المنتجات</a>
             <a class="secondary-btn" href="#about" data-i18n="knowUs">عن المتجر</a>
           </div>
-          <div class="trust-row"><span>925</span><span data-i18n="clearWeight">الوزن واضح</span><span data-i18n="noAccount">بدون حساب للعميل</span></div>
+          <div class="trust-row"><span>925</span><span data-i18n="clearWeight">الوزن واضح</span><span data-i18n="noAccount">اختيارات ليك وليها</span></div>
         </div>
         <div class="hero-visual">
-          <div class="hero-jewel"><span class="jewel-ring ring-one"></span><span class="jewel-ring ring-two"></span><div class="jewel-copy"><small>ELBTRIK</small><strong>925</strong><span>SILVER</span></div></div>
+          <img id="heroImage" class="hero-brand-image" src="assets/logo.png" alt="فضيات البطريق — إكسسوارات فضة">
         </div>
       </div>
     </section>
@@ -67,8 +67,8 @@
       <div class="container">
         <div class="section-heading"><div><span class="eyebrow" data-i18n="ourProducts">المنتجات</span><h2 data-i18n="bestPieces">أحدث القطع</h2></div></div>
         <div class="shop-toolbar">
-          <div class="search-wrap"><span>⌕</span><input id="searchInput" type="search" maxlength="80" placeholder="ابحث بالاسم أو الكود..."></div>
-          <select id="sortSelect"><option value="newest">الأحدث</option><option value="priceAsc">السعر: الأقل</option><option value="priceDesc">السعر: الأعلى</option></select>
+          <div class="search-wrap"><span>⌕</span><input aria-label="البحث عن منتج" id="searchInput" type="search" maxlength="80" placeholder="ابحث بالاسم أو الكود..."></div>
+          <select aria-label="ترتيب المنتجات" id="sortSelect"><option value="newest">الأحدث</option><option value="priceAsc">السعر: الأقل</option><option value="priceDesc">السعر: الأعلى</option></select>
         </div>
         <div class="filters">
           <button class="filter-btn active" data-filter="all">الكل</button>
@@ -83,16 +83,16 @@
 
     <section id="about" class="container about-section">
       <div class="about-card">
-        <div><span class="eyebrow">فضيات البطريق</span><h2>متجر بسيط وسريع خصوصًا على الموبايل.</h2></div>
-        <p>كل قطعة لها معرض صور، سعر، وزن، عيار، مقاسات ومخزون. تقدر تضيف حتى 8 صور للمنتج من روابط ImageKit.</p>
+        <div><span class="eyebrow">فضيات البطريق</span><h2>لكل شخصية قطعة تليق بيها.</h2></div>
+        <p>من الخواتم والسلاسل للأساور والإكسسوارات، اختار فضتك الحريمي والرجالي بتفاصيل تعبّر عنك. اكتشف الصور والمقاسات والوزن، واطلب قطعتك المفضلة بسهولة.</p>
       </div>
     </section>
 
     <section class="container benefits">
       <article><b>Ag</b><span>بيانات العيار واضحة</span></article>
       <article><b>g</b><span>الوزن بالجرام</span></article>
-      <article><b>📱</b><span>واجهة شبه التطبيق</span></article>
-      <article><b>🔒</b><span>إدارة منفصلة ومحمية</span></article>
+      <article><b>📱</b><span>اطلب بسهولة على واتساب</span></article>
+      <article><b>🔒</b><span>اختيارات ليك وليها</span></article>
     </section>
 
     <section class="contact-section">

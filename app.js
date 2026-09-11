@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, where, doc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 import { initializeAppCheck, ReCaptchaV3Provider } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app-check.js";
 import { firebaseConfig, storeSettings } from "./firebase-config.js";
 
@@ -8,11 +8,13 @@ const $$ = s => [...document.querySelectorAll(s)];
 const el = (tag, cls='', text) => { const n=document.createElement(tag); if(cls)n.className=cls; if(text!==undefined)n.textContent=text; return n; };
 const configured = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('PASTE');
 let lang = localStorage.getItem('lang') === 'en' ? 'en' : 'ar';
-let products=[], cart=JSON.parse(localStorage.getItem('penguinCart')||'[]'), filter='all', category='all', search='', sort='newest';
+function readCart(){try{const a=JSON.parse(localStorage.getItem('penguinCart')||'[]');return Array.isArray(a)?a.filter(i=>i&&typeof i.id==='string'&&typeof i.key==='string'&&Number.isInteger(i.qty)&&i.qty>0):[];}catch{return [];}}
+let loading=true, loadFailed=false;
+let products=[], cart=readCart(), filter='all', category='all', search='', sort='newest';
 
 const T={
-  ar:{home:'الرئيسية',products:'المنتجات',about:'عن المتجر',eyebrow:'اختيارات فضة بتفاصيل واضحة',heroTitle:'ستايل أسود × فضي|ولمسة صفراء مميزة.',heroDesc:'خواتم، سلاسل، أساور وإكسسوارات فضة. السعر والوزن والعيار واضحين قبل الطلب.',shopNow:'شوف المنتجات',knowUs:'عن المتجر',clearWeight:'الوزن واضح',noAccount:'بدون حساب للعميل',collections:'التصنيفات',browse:'اختار نوع القطعة',rings:'خواتم',chains:'سلاسل',bracelets:'أساور',accessories:'إكسسوارات',ourProducts:'المنتجات',bestPieces:'أحدث القطع',weight:'الوزن',karat:'العيار',inStock:'متوفر',outOfStock:'غير متوفر',emptyCart:'السلة فاضية',add:'أضف للسلة',chooseSize:'اختر المقاس',size:'المقاس',sku:'الكود',material:'الخامة'},
-  en:{home:'Home',products:'Products',about:'About',eyebrow:'Silver pieces with clear details',heroTitle:'Black × Silver style|with a bold yellow accent.',heroDesc:'Rings, chains, bracelets and silver accessories. Price, weight and purity are clear before ordering.',shopNow:'Shop now',knowUs:'About us',clearWeight:'Clear weight',noAccount:'No customer account',collections:'Collections',browse:'Choose a category',rings:'Rings',chains:'Chains',bracelets:'Bracelets',accessories:'Accessories',ourProducts:'Products',bestPieces:'Latest pieces',weight:'Weight',karat:'Purity',inStock:'In stock',outOfStock:'Out of stock',emptyCart:'Your cart is empty',add:'Add to cart',chooseSize:'Choose size',size:'Size',sku:'SKU',material:'Material'}
+  ar:{home:'الرئيسية',products:'المنتجات',about:'عن المتجر',eyebrow:'فضيات حريمي ورجالي وإكسسوارات',heroTitle:'فضة تكمّل أناقتك…|تفاصيل تليق بيك وبيكي.',heroDesc:'خواتم، سلاسل، أساور وإكسسوارات فضة. السعر والوزن والعيار واضحين قبل الطلب.',shopNow:'شوف المنتجات',knowUs:'عن المتجر',clearWeight:'الوزن واضح',noAccount:'اختيارات ليك وليها',collections:'التصنيفات',browse:'اختار نوع القطعة',rings:'خواتم',chains:'سلاسل',bracelets:'أساور',accessories:'إكسسوارات',ourProducts:'المنتجات',bestPieces:'أحدث القطع',weight:'الوزن',karat:'العيار',inStock:'متوفر',outOfStock:'غير متوفر',emptyCart:'السلة فاضية',add:'أضف للسلة',chooseSize:'اختر المقاس',size:'المقاس',sku:'الكود',material:'الخامة'},
+  en:{home:'Home',products:'Products',about:'About',eyebrow:'Silver jewellery for her & him',heroTitle:'Silver for your style.|Details made for you.',heroDesc:'Rings, chains, bracelets and silver accessories. Price, weight and purity are clear before ordering.',shopNow:'Shop now',knowUs:'About us',clearWeight:'Clear weight',noAccount:'For her & him',collections:'Collections',browse:'Choose a category',rings:'Rings',chains:'Chains',bracelets:'Bracelets',accessories:'Accessories',ourProducts:'Products',bestPieces:'Latest pieces',weight:'Weight',karat:'Purity',inStock:'In stock',outOfStock:'Out of stock',emptyCart:'Your cart is empty',add:'Add to cart',chooseSize:'Choose size',size:'Size',sku:'SKU',material:'Material'}
 };
 
 function safeUrl(url){ try{ if(!url)return 'assets/logo.png'; if(url.startsWith('assets/'))return url; const u=new URL(url,location.href); return u.protocol==='https:'||u.origin===location.origin?u.href:'assets/logo.png'; }catch{return 'assets/logo.png';} }
@@ -39,7 +41,7 @@ function filteredProducts(){
 }
 
 function renderProducts(){
-  const grid=$('#productGrid'); if(!grid)return; const list=filteredProducts(); grid.replaceChildren(); $('#loadingProducts').style.display=list.length?'none':'block';
+  const grid=$('#productGrid'); if(!grid)return; const list=filteredProducts(); grid.replaceChildren(); $('#loadingProducts').style.display=list.length?'none':'block'; $('#loadingProducts').textContent=loading?(lang==='ar'?'جاري تحميل المنتجات…':'Loading products…'):loadFailed?(lang==='ar'?'تعذر تحميل المنتجات. أعد تحميل الصفحة للمحاولة مرة أخرى.':'Unable to load products. Please reload to retry.'):(lang==='ar'?'لا توجد منتجات مطابقة حاليًا.':'No matching products.');
   for(const p of list){
     const card=el('article','product-card'); const image=el('button','product-image'); image.type='button'; image.dataset.open=p.id;
     const imgs=productImages(p); const img=document.createElement('img'); img.src=safeUrl(imgs[0]); img.alt=label(p,'name'); img.loading='lazy'; img.onerror=()=>img.src='assets/logo.png'; image.append(img);
@@ -49,7 +51,7 @@ function renderProducts(){
     const meta=el('div','product-meta'); meta.append(el('span','',`${T[lang].weight}: ${weightText(p)}`),el('span','',`${T[lang].karat}: ${purity(p)}`)); info.append(meta);
     info.append(el('small',Number(p.stock)===0?'stock out':'stock',Number(p.stock)===0?T[lang].outOfStock:T[lang].inStock));
     const row=el('div','price-row'); const price=el('div','price'); price.append(el('strong','',money(p.price))); if(Number(p.oldPrice)>Number(p.price))price.append(el('span','old-price',money(p.oldPrice)));
-    const add=el('button','add-btn','＋'); add.type='button'; add.dataset.add=p.id; add.disabled=Number(p.stock)===0; row.append(price,add); info.append(row); card.append(image,info); grid.append(card);
+    const add=el('button','add-btn','＋'); add.type='button'; add.dataset.add=p.id;add.setAttribute('aria-label',T[lang].add+' '+label(p,'name')); add.disabled=Number(p.stock)===0; row.append(price,add); info.append(row); card.append(image,info); grid.append(card);
   }
   $$('[data-add]').forEach(b=>b.onclick=()=>addToCart(b.dataset.add)); $$('[data-open]').forEach(b=>b.onclick=()=>openProduct(b.dataset.open));
 }
@@ -96,17 +98,20 @@ function checkoutMessage(data){
 }
 
 async function loadFirebaseProducts(){
-  if(!configured)return; try{const app=initializeApp(firebaseConfig);if(storeSettings.appCheckSiteKey)initializeAppCheck(app,{provider:new ReCaptchaV3Provider(storeSettings.appCheckSiteKey),isTokenAutoRefreshEnabled:true});const db=getFirestore(app);const snap=await getDocs(query(collection(db,'products'),where('active','==',true)));products=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));cart=cart.filter(i=>products.some(p=>p.id===i.id));renderProducts();renderCart();}catch(err){console.error('Firebase load failed',err);$('#loadingProducts').textContent='تعذر تحميل المنتجات. حاول مرة أخرى.';}
+  if(!configured){loading=false;loadFailed=true;renderProducts();return;} try{const app=initializeApp(firebaseConfig);if(storeSettings.appCheckSiteKey)initializeAppCheck(app,{provider:new ReCaptchaV3Provider(storeSettings.appCheckSiteKey),isTokenAutoRefreshEnabled:true});const db=getFirestore(app);loadBranding(db);const snap=await getDocs(query(collection(db,'products'),where('active','==',true)));products=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));cart=cart.filter(i=>products.some(p=>p.id===i.id&&Number(p.stock)>0));loading=false;renderProducts();renderCart();}catch(err){loading=false;loadFailed=true;renderProducts();console.error('Firebase load failed',err);$('#loadingProducts').textContent='تعذر تحميل المنتجات. حاول مرة أخرى.';}
 }
 
 $('#langBtn').onclick=()=>{lang=lang==='ar'?'en':'ar';localStorage.setItem('lang',lang);applyLang();};
 $('#cartBtn').onclick=openCart;$('#closeCart').onclick=closeCart;$('#overlay').onclick=closeCart;$('#closeProductModal').onclick=()=>closeModal('#productModal');$('#closeCheckoutModal').onclick=()=>closeModal('#checkoutModal');
 $('#searchInput').oninput=e=>{search=e.target.value.trim();renderProducts();};$('#sortSelect').onchange=e=>{sort=e.target.value;renderProducts();};
-$$('.filter-btn').forEach(b=>b.onclick=()=>{$$('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;renderProducts();});
-$$('.category-card').forEach(b=>b.onclick=()=>{category=b.dataset.category;filter='all';$$('.filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.filter==='all'));$('#products').scrollIntoView({behavior:'smooth'});renderProducts();});
+$$('.filter-btn').forEach(b=>b.onclick=()=>{$$('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;category='all';$$('.category-card').forEach(x=>x.classList.remove('selected'));renderProducts();});
+$$('.category-card').forEach(b=>b.onclick=()=>{category=b.dataset.category;$$('.category-card').forEach(x=>x.classList.toggle('selected',x===b));filter='all';$$('.filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.filter==='all'));$('#products').scrollIntoView({behavior:'smooth'});renderProducts();});
 $('#checkoutBtn').onclick=()=>{closeCart();openModal('#checkoutModal');};
 $('#checkoutForm').onsubmit=e=>{e.preventDefault();if(!cart.length)return;const payment=$('input[name="paymentMethod"]:checked')?.value||'cash-wallet';const data={name:$('#customerName').value.trim(),phone:$('#customerPhone').value.trim(),gov:$('#governorate').value.trim(),address:$('#address').value.trim(),notes:$('#notes').value.trim(),payment};if(!data.name||!data.phone||!data.gov||!data.address)return;window.open(whatsappUrl(checkoutMessage(data)),'_blank','noopener,noreferrer');};
 $$('[data-mobile-nav]').forEach(b=>b.onclick=()=>{const a=b.dataset.mobileNav;if(a==='home')$('#home').scrollIntoView({behavior:'smooth'});if(a==='categories')$('#categories').scrollIntoView({behavior:'smooth'});if(a==='search'){ $('#products').scrollIntoView({behavior:'smooth'});setTimeout(()=>$('#searchInput').focus(),400);}if(a==='cart')openCart();});
 document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeCart();closeModal('#productModal');closeModal('#checkoutModal');}});
 $('#whatsappLink').href=whatsappUrl();$('#floatingWhatsapp').href=whatsappUrl();
 applyLang();loadFirebaseProducts();
+
+async function loadBranding(db){try{const snap=await getDoc(doc(db,'settings','branding'));if(!snap.exists())return;const data=snap.data();for(const img of $$('.logo-tile img'))setBrandImage(img,data.logoUrl);setBrandImage($('#heroImage'),data.heroUrl);const icon=document.querySelector('link[rel="icon"]');if(data.logoUrl)icon.href=safeUrl(data.logoUrl);}catch(err){console.warn('Brand settings unavailable; using bundled logo.',err);}}
+function setBrandImage(img,url){if(!img)return;img.onerror=()=>{img.onerror=null;img.src='assets/logo.png';};img.src=safeUrl(url||'assets/logo.png');}
