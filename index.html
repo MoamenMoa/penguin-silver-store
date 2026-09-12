@@ -12,7 +12,7 @@
   <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div class="announcement">خصومات مختارة • شحن لجميع المحافظات • واتساب مباشر</div>
+  <div id="announcement" class="announcement"><div class="announcement-window"><span id="announcementText" class="announcement-text">أقوى عروض وتخفيضات تصل لـ30% بمناسبة افتتاح فضيات البطريق</span></div><button id="announcementPause" type="button" aria-label="إيقاف أو تشغيل حركة شريط العروض" aria-pressed="false">إيقاف</button></div>
 
   <header class="topbar">
     <div class="container nav-wrap">
@@ -51,7 +51,7 @@
       </div>
     </section>
 
-    <section class="container categories" id="categories">
+    <section id="showcase" class="container showcase" aria-labelledby="showcaseTitle" hidden><div class="section-heading"><div><span class="eyebrow">فضيات البطريق</span><h2 id="showcaseTitle">اختيارات تستاهل تشوفها</h2></div><div class="showcase-controls"><button id="showcaseRight" type="button" aria-label="تحريك المنتجات يمينًا">→</button><button id="showcasePause" type="button" aria-pressed="false">إيقاف الحركة</button><button id="showcaseLeft" type="button" aria-label="تحريك المنتجات يسارًا">←</button></div></div><div id="showcaseTrack" class="showcase-track" tabindex="0" aria-label="منتجات مختارة؛ اسحب لرؤية المزيد"></div></section><section class="container categories" id="categories">
       <div class="section-heading">
         <div><span class="eyebrow" data-i18n="collections">التصنيفات</span><h2 data-i18n="browse">اختار نوع القطعة</h2></div>
       </div>
@@ -108,9 +108,9 @@
       <div class="brand"><span class="logo-tile"><img src="assets/logo.png" alt=""></span><span class="brand-copy"><strong>فضيات البطريق</strong><small>Silver Accessories</small></span></div>
       <p>رقم المتجر: <b dir="ltr">+20 120 780 0721</b></p>
     </div>
-  </footer>
+<nav class="container policy-links" aria-label="سياسات المتجر"><a href="policies.html#shipping">الشحن والتوصيل</a><a href="policies.html#returns">الاستبدال والاسترجاع</a><a href="policies.html#privacy">الخصوصية</a><a href="policies.html#terms">الشروط والأحكام</a></nav></footer>
 
-  <a id="floatingWhatsapp" class="floating-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="WhatsApp">☎</a>
+  <a id="floatingWhatsapp" class="floating-whatsapp" target="_blank" rel="noopener noreferrer" aria-label="تواصل مع فضيات البطريق على واتساب"><svg viewBox="0 0 32 32" width="30" height="30" aria-hidden="true"><path fill="currentColor" d="M16 .5A15.4 15.4 0 0 0 2.7 23.7L.6 31.4l7.9-2.1A15.4 15.4 0 1 0 16 .5zm0 28.1a12.6 12.6 0 0 1-6.4-1.7l-.5-.3-4.7 1.2 1.3-4.6-.3-.5A12.8 12.8 0 1 1 16 28.6zm7-9.5c-.4-.2-2.3-1.1-2.6-1.2-.4-.1-.6-.2-.9.2-.2.4-1 1.2-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.6-.6-3-1.9-1.1-1-1.8-2.2-2-2.6-.2-.4 0-.6.2-.8l.6-.7c.2-.2.3-.4.4-.6.1-.3 0-.5 0-.7-.1-.2-.9-2.2-1.2-3-.3-.8-.6-.7-.9-.7h-.8c-.3 0-.7.1-1 .5-.4.4-1.4 1.4-1.4 3.3s1.4 3.7 1.6 3.9c.2.3 2.8 4.3 6.8 6 .9.4 1.7.6 2.3.8.9.3 1.8.2 2.5.2.8-.2 2.3-1 2.6-1.9.3-1 .3-1.8.2-1.9-.1-.2-.4-.3-.8-.5z"/></svg></a>
 
   <nav class="mobile-bottom-nav" aria-label="Mobile navigation">
     <button data-mobile-nav="home"><span>⌂</span><small>الرئيسية</small></button>
@@ -119,23 +119,23 @@
     <button data-mobile-nav="cart" class="mobile-cart"><span>🛍</span><small>السلة</small><i id="mobileCartCount">0</i></button>
   </nav>
 
-  <aside id="cartDrawer" class="cart-drawer" aria-hidden="true">
+  <aside role="dialog" aria-modal="true" aria-label="سلة التسوق" id="cartDrawer" class="cart-drawer" aria-hidden="true">
     <div class="cart-header"><h3>سلة التسوق</h3><button id="closeCart" class="icon-btn" type="button">✕</button></div>
-    <div id="cartItems" class="cart-items"></div>
+    <p id="cartStatus" class="cart-status" role="status"></p><div id="cartItems" class="cart-items"></div>
     <div class="cart-footer"><div class="cart-total"><span>الإجمالي</span><strong id="cartTotal">0 EGP</strong></div><button id="checkoutBtn" class="primary-btn full" type="button">استكمال الطلب</button></div>
   </aside>
   <div id="overlay" class="overlay"></div>
 
-  <section id="productModal" class="modal" aria-hidden="true"><div class="modal-card product-modal-card"><button class="modal-close" id="closeProductModal" type="button">✕</button><div id="productModalContent"></div></div></section>
+  <section role="dialog" aria-modal="true" aria-label="تفاصيل المنتج" id="productModal" class="modal" aria-hidden="true"><div class="modal-card product-modal-card"><button class="modal-close" id="closeProductModal" type="button">✕</button><div id="productModalContent"></div></div></section>
 
-  <section id="checkoutModal" class="modal" aria-hidden="true">
+  <section role="dialog" aria-modal="true" aria-label="إتمام الطلب" id="checkoutModal" class="modal" aria-hidden="true">
     <div class="modal-card checkout-card">
       <button class="modal-close" id="closeCheckoutModal" type="button">✕</button>
       <h2>إتمام الطلب</h2>
       <div class="wallet-banner"><span class="wallet-icon">▣</span><div><small>محفظة كاش</small><strong dir="ltr">+20 120 780 0721</strong></div></div>
-      <form id="checkoutForm" class="checkout-form">
+      <p class="checkout-notice">إجمالي المنتجات لا يشمل الشحن. التوافر وتكلفة التوصيل يتأكدوا مع المتجر قبل الدفع. <a href="policies.html" target="_blank" rel="noopener noreferrer">سياسات المتجر</a></p><form id="checkoutForm" class="checkout-form">
         <label>الاسم<input id="customerName" maxlength="100" required></label>
-        <label>رقم الهاتف<input id="customerPhone" inputmode="tel" maxlength="30" required></label>
+        <label>رقم الهاتف<input id="customerPhone" type="tel" inputmode="tel" minlength="8" maxlength="30" required></label>
         <label>المحافظة<input id="governorate" maxlength="60" required></label>
         <label>العنوان<textarea id="address" maxlength="400" required></textarea></label>
         <div class="payment-options">
@@ -148,6 +148,6 @@
     </div>
   </section>
 
-  <script type="module" src="app.js"></script>
+  <script type="module" src="app.js?v=3"></script>
 </body>
 </html>

@@ -6,11 +6,38 @@ service cloud.firestore {
     function isAdmin() { return signedIn() && exists(adminDoc()) && get(adminDoc()).data.role == 'admin'; }
     function validCategory(v) { return v in ['rings','chains','bracelets','accessories']; }
 
+    function validImage(v) { return v is string && v.size() > 0 && v.size() <= 1500 && v.matches('https://[^\\s]+'); }
+    function validImages(v) { return v is list && v.size() >= 1 && v.size() <= 8
+      && (v.size() <= 0 || (validImage(v[0])))
+      && (v.size() <= 1 || (validImage(v[1])))
+      && (v.size() <= 2 || (validImage(v[2])))
+      && (v.size() <= 3 || (validImage(v[3])))
+      && (v.size() <= 4 || (validImage(v[4])))
+      && (v.size() <= 5 || (validImage(v[5])))
+      && (v.size() <= 6 || (validImage(v[6])))
+      && (v.size() <= 7 || (validImage(v[7]))); }
+    // A round-trip proves every entry is a string without embedded delimiters.
+    function validSizes(v) { let joined = v.join(','); return v is list && v.size() <= 30
+      && (v.size() == 0 || (v == joined.split(',') && joined.matches('[^,]{1,100}(,[^,]{1,100}){0,29}'))); }
+    function validIds(v) { return v is list && v.size() <= 12 && v.toSet().size() == v.size()
+      && (v.size() <= 0 || (v[0] is string && v[0].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 1 || (v[1] is string && v[1].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 2 || (v[2] is string && v[2].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 3 || (v[3] is string && v[3].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 4 || (v[4] is string && v[4].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 5 || (v[5] is string && v[5].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 6 || (v[6] is string && v[6].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 7 || (v[7] is string && v[7].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 8 || (v[8] is string && v[8].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 9 || (v[9] is string && v[9].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 10 || (v[10] is string && v[10].matches('[A-Za-z0-9_-]{1,128}')))
+      && (v.size() <= 11 || (v[11] is string && v[11].matches('[A-Za-z0-9_-]{1,128}'))); }
+
     function validProduct(d) {
       return d.keys().hasOnly([
         'nameAr','nameEn','descAr','descEn','price','oldPrice','category','image','images',
         'featured','isNew','onSale','active','stock','sku','material','karat','sizes',
-        'weight','createdAt','updatedAt'
+        'weight','createdAt','updatedAt','showOnHome','ratingEnabled','ratingStars','ratingText'
       ])
       && d.nameAr is string && d.nameAr.size() > 0 && d.nameAr.size() <= 120
       && d.nameEn is string && d.nameEn.size() > 0 && d.nameEn.size() <= 120
@@ -20,22 +47,29 @@ service cloud.firestore {
       && d.oldPrice is number && d.oldPrice >= 0 && d.oldPrice <= 10000000
       && (d.oldPrice == 0 || d.oldPrice >= d.price)
       && validCategory(d.category)
-      && d.image is string && d.image.size() > 0 && d.image.size() <= 1500
-      && d.images is list && d.images.size() >= 1 && d.images.size() <= 8
+      && validImage(d.image) && d.image == d.images[0]
+      && validImages(d.images)
       && d.featured is bool && d.isNew is bool && d.onSale is bool && d.active is bool
       && d.stock is int && d.stock >= 0 && d.stock <= 100000
       && d.sku is string && d.sku.size() <= 80
       && d.material is string && d.material.size() <= 120
       && d.karat is string && d.karat.size() > 0 && d.karat.size() <= 20
-      && d.sizes is list && d.sizes.size() <= 30
+      && validSizes(d.sizes)
       && d.weight is number && d.weight >= 0 && d.weight <= 100000
       && d.createdAt is timestamp
-      && d.updatedAt is timestamp;
+      && d.updatedAt is timestamp
+      && d.get('showOnHome', true) is bool
+      && d.get('ratingEnabled', false) is bool
+      && d.get('ratingStars', 0) is number && d.get('ratingStars', 0) >= 0 && d.get('ratingStars', 0) <= 5
+      && d.get('ratingText', '') is string && d.get('ratingText', '').size() <= 400
+      && (!d.get('ratingEnabled', false) || d.get('ratingStars', 0) >= 0.5);
     }
 
     match /products/{productId} {
       allow read: if resource.data.active == true || isAdmin();
-      allow create, update: if isAdmin() && validProduct(request.resource.data);
+      allow create, update: if isAdmin() && validProduct(request.resource.data)
+        && request.resource.data.updatedAt == request.time
+        && (request.method == 'create' ? request.resource.data.createdAt == request.time : request.resource.data.createdAt == resource.data.createdAt);
       allow delete: if isAdmin();
     }
 
@@ -49,6 +83,24 @@ service cloud.firestore {
         && request.resource.data.heroUrl is string
         && request.resource.data.heroUrl.size() <= 1500
         && (request.resource.data.heroUrl == '' || request.resource.data.heroUrl.matches('https://.*'))
+        && request.resource.data.updatedAt == request.time;
+      allow delete: if false;
+    }
+
+    match /settings/content {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['announcementEnabled','announcementText','carouselEnabled','carouselTitle','carouselAutoplay','carouselDirection','carouselIds','shipping','returns','privacy','terms','updatedAt'])
+        && request.resource.data.announcementEnabled is bool
+        && request.resource.data.announcementText is string && request.resource.data.announcementText.size() > 0 && request.resource.data.announcementText.size() <= 200
+        && request.resource.data.carouselEnabled is bool && request.resource.data.carouselAutoplay is bool
+        && request.resource.data.carouselTitle is string && request.resource.data.carouselTitle.size() > 0 && request.resource.data.carouselTitle.size() <= 100
+        && request.resource.data.carouselDirection in ['left','right']
+        && validIds(request.resource.data.carouselIds)
+        && request.resource.data.shipping is string && request.resource.data.shipping.size() > 0 && request.resource.data.shipping.size() <= 6000
+        && request.resource.data.returns is string && request.resource.data.returns.size() > 0 && request.resource.data.returns.size() <= 6000
+        && request.resource.data.privacy is string && request.resource.data.privacy.size() > 0 && request.resource.data.privacy.size() <= 6000
+        && request.resource.data.terms is string && request.resource.data.terms.size() > 0 && request.resource.data.terms.size() <= 6000
         && request.resource.data.updatedAt == request.time;
       allow delete: if false;
     }
