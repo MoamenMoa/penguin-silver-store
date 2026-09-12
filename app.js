@@ -1,3 +1,4 @@
+import {departments,matchesCategory} from './categories.js';
 import {saleBadge,ratingNode,discountPercent} from './product-decor.js';
 import {safeImage,localRead,localWrite,reconcileCart} from './content.js';
 import {applyContent,updateShowcase} from './storefront-content.js';
@@ -13,7 +14,7 @@ const configured = firebaseConfig.apiKey && !firebaseConfig.apiKey.startsWith('P
 let lang = localRead('lang') === 'en' ? 'en' : 'ar';
 function readCart(){try{const a=JSON.parse(localRead('penguinCart')||'[]');return Array.isArray(a)?a.filter(i=>i&&typeof i.id==='string'&&typeof i.key==='string'&&Number.isInteger(i.qty)&&i.qty>0):[];}catch{return [];}}
 let loading=true, loadFailed=false,storeDb=null;
-let products=[], cart=readCart(), filter='all', category='all', search='', sort='newest';
+let products=[], cart=readCart(), filter='all', category='all', subcategory='all', search='', sort='newest';
 
 const T={
   ar:{home:'الرئيسية',products:'المنتجات',about:'عن المتجر',eyebrow:'فضيات حريمي ورجالي وإكسسوارات',heroTitle:'فضة تكمّل أناقتك…|تفاصيل تليق بيك وبيكي.',heroDesc:'خواتم، سلاسل، أساور وإكسسوارات فضة. السعر والوزن والعيار واضحين قبل الطلب.',shopNow:'شوف المنتجات',knowUs:'عن المتجر',clearWeight:'الوزن واضح',noAccount:'اختيارات ليك وليها',collections:'التصنيفات',browse:'اختار نوع القطعة',rings:'خواتم',chains:'سلاسل',bracelets:'أساور',accessories:'إكسسوارات',ourProducts:'المنتجات',bestPieces:'أحدث القطع',weight:'الوزن',karat:'العيار',inStock:'متوفر',outOfStock:'غير متوفر',emptyCart:'السلة فاضية',add:'أضف للسلة',chooseSize:'اختر المقاس',size:'المقاس',sku:'الكود',material:'الخامة'},
@@ -32,11 +33,11 @@ function persistCart(){ localWrite('penguinCart',JSON.stringify(cart)); }
 function applyLang(){
   document.documentElement.lang=lang; document.documentElement.dir=lang==='ar'?'rtl':'ltr'; $('#langBtn').textContent=lang==='ar'?'EN':'AR';
   $$('[data-i18n]').forEach(n=>{const k=n.dataset.i18n;if(T[lang][k]){if(k==='heroTitle'){const [a,b]=T[lang][k].split('|');n.innerHTML='';n.append(document.createTextNode(a),document.createElement('br'));const m=document.createElement('mark');m.textContent=b;n.append(m);}else n.textContent=T[lang][k];}});
-  renderProducts(); renderCart();updateShowcase(products,lang,openProduct);
+  renderCategoryNavigation();renderProducts(); renderCart();updateShowcase(products,lang,openProduct);
 }
 
 function filteredProducts(){
-  let list=products.filter(p=>category==='all'?p.showOnHome!==false:p.category===category);
+  let list=products.filter(p=>matchesCategory(p,category,subcategory));
   if(filter==='featured')list=list.filter(p=>p.featured); if(filter==='new')list=list.filter(p=>p.isNew); if(filter==='sale')list=list.filter(p=>p.onSale||discountPercent(p)>0);
   const q=search.toLowerCase(); if(q)list=list.filter(p=>`${p.nameAr||''} ${p.nameEn||''} ${p.sku||''} ${p.karat||''}`.toLowerCase().includes(q));
   if(sort==='priceAsc')list.sort((a,b)=>Number(a.price)-Number(b.price)); else if(sort==='priceDesc')list.sort((a,b)=>Number(b.price)-Number(a.price)); else list.sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));
@@ -112,8 +113,13 @@ async function loadFirebaseProducts(){
 $('#langBtn').onclick=()=>{lang=lang==='ar'?'en':'ar';localWrite('lang',lang);applyLang();};
 $('#cartBtn').onclick=openCart;$('#closeCart').onclick=closeCart;$('#overlay').onclick=closeCart;$('#closeProductModal').onclick=()=>closeModal('#productModal');$('#closeCheckoutModal').onclick=()=>closeModal('#checkoutModal');
 $('#searchInput').oninput=e=>{search=e.target.value.trim();renderProducts();};$('#sortSelect').onchange=e=>{sort=e.target.value;renderProducts();};
-$$('.filter-btn').forEach(b=>b.onclick=()=>{$$('.filter-btn').forEach(x=>x.classList.remove('active'));b.classList.add('active');filter=b.dataset.filter;category='all';$$('.category-card').forEach(x=>x.classList.remove('selected'));renderProducts();});
-$$('.category-card').forEach(b=>b.onclick=()=>{category=b.dataset.category;$$('.category-card').forEach(x=>x.classList.toggle('selected',x===b));filter='all';$$('.filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.filter==='all'));$('#products').scrollIntoView({behavior:'smooth'});renderProducts();});
+function renderCategoryNavigation(){
+  for(const b of $$('[data-department]')){const id=b.dataset.department;const d=departments.find(x=>x.id===id);b.querySelector('b').textContent=d?d[lang]:(lang==='ar'?'الرئيسية':'Home');b.classList.toggle('selected',id===category);b.setAttribute('aria-pressed',String(id===category));}
+  const nav=$('#subcategoryNav');nav.replaceChildren();const d=departments.find(d=>d.id===category);nav.hidden=!d;if(!d)return;
+  for(const c of [['all','الكل','All'],...d.children]){const b=el('button','filter-btn'+(subcategory===c[0]?' active':''),c[lang==='ar'?1:2]);b.type='button';b.dataset.subcategory=c[0];b.setAttribute('aria-pressed',String(subcategory===c[0]));b.onclick=()=>{subcategory=c[0];renderCategoryNavigation();renderProducts();$('#products').scrollIntoView({behavior:'smooth'});};nav.append(b);}
+}
+$$('.filters .filter-btn').forEach(b=>b.onclick=()=>{$$('.filters .filter-btn').forEach(x=>x.classList.toggle('active',x===b));filter=b.dataset.filter;renderProducts();});
+$$('[data-department]').forEach(b=>b.onclick=()=>{category=b.dataset.department;subcategory='all';filter='all';$$('.filters .filter-btn').forEach(x=>x.classList.toggle('active',x.dataset.filter==='all'));renderCategoryNavigation();renderProducts();if(category==='all')$('#products').scrollIntoView({behavior:'smooth'});else $('#categories').scrollIntoView({behavior:'smooth'});});
 $('#checkoutBtn').onclick=async()=>{
   const button=$('#checkoutBtn');button.disabled=true;$('#cartStatus').textContent='جاري مراجعة الأسعار والمخزون…';
   try{if(!storeDb)throw Error();const old=JSON.stringify(cart.map(i=>[i.id,i.size,i.qty,products.find(p=>p.id===i.id)?.price]));

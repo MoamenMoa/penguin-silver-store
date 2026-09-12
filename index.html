@@ -9,7 +9,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com/recaptcha/; style-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.gstatic.com https://www.google.com/recaptcha/; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
   <title>فضيات البطريق | Penguin Silver</title>
   <link rel="icon" href="assets/logo.png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body>
   <div id="announcement" class="announcement"><div class="announcement-window"><span id="announcementText" class="announcement-text">أقوى عروض وتخفيضات تصل لـ30% بمناسبة افتتاح فضيات البطريق</span></div><button id="announcementPause" type="button" aria-label="إيقاف أو تشغيل حركة شريط العروض" aria-pressed="false">إيقاف</button></div>
@@ -55,12 +55,7 @@
       <div class="section-heading">
         <div><span class="eyebrow" data-i18n="collections">التصنيفات</span><h2 data-i18n="browse">اختار نوع القطعة</h2></div>
       </div>
-      <div class="category-grid">
-        <button class="category-card" data-category="rings"><span>◌</span><b data-i18n="rings">خواتم</b></button>
-        <button class="category-card" data-category="chains"><span>⌁</span><b data-i18n="chains">سلاسل</b></button>
-        <button class="category-card" data-category="bracelets"><span>◇</span><b data-i18n="bracelets">أساور</b></button>
-        <button class="category-card" data-category="accessories"><span>✦</span><b data-i18n="accessories">إكسسوارات</b></button>
-      </div>
+      <div class="category-grid departments"><button type="button" class="category-card" data-department="all"><b>الرئيسية</b></button><button type="button" class="category-card" data-department="men"><b>رجالي</b></button><button type="button" class="category-card" data-department="women"><b>حريمي</b></button><button type="button" class="category-card" data-department="metals"><b>الستانلس والتنجستن</b></button></div><div id="subcategoryNav" class="subcategory-nav" aria-label="الأقسام الفرعية" hidden></div>
     </section>
 
     <section id="products" class="products-section">
@@ -148,6 +143,6 @@
     </div>
   </section>
 
-  <script type="module" src="app.js?v=3"></script>
+  <script type="module" src="app.js?v=4"></script>
 </body>
 </html>

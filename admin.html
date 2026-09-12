@@ -8,7 +8,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' https://www.gstatic.com https://www.google.com/recaptcha/; style-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' https://*.googleapis.com https://*.firebaseio.com wss://*.firebaseio.com https://www.gstatic.com https://www.google.com/recaptcha/; frame-src https://www.google.com/recaptcha/ https://recaptcha.google.com/recaptcha/; object-src 'none'; base-uri 'self'; form-action 'none'; upgrade-insecure-requests">
   <title>إدارة فضيات البطريق</title>
   <link rel="icon" href="assets/logo.png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=4">
 </head>
 <body class="admin-body">
   <section id="loginView" class="login-wrap">
@@ -44,7 +44,7 @@
               <div class="field"><label>العيار</label><input id="karat" maxlength="20" value="925" placeholder="925" required></div>
               <div class="field"><label>المخزون</label><input id="stock" type="number" min="0" max="100000" step="1" value="1" required></div>
               <div class="field"><label>SKU / كود المنتج</label><input id="sku" maxlength="80" placeholder="PS-R001"></div>
-              <div class="field"><label>التصنيف</label><select id="category"><option value="rings">خواتم</option><option value="chains">سلاسل</option><option value="bracelets">أساور</option><option value="accessories">إكسسوارات</option></select></div>
+              <div class="field"><label for="department">القسم الرئيسي</label><select id="department" required><option value="">اختر القسم</option><option value="men">رجالي</option><option value="women">حريمي</option><option value="metals">الستانلس والتنجستن</option></select></div><div class="field"><label for="category">القسم الفرعي</label><select id="category" required><option value="">اختر القسم الرئيسي أولًا</option></select></div>
               <div class="field"><label for="showOnHome">مكان ظهور المنتج</label><select id="showOnHome"><option value="true">في القسم والرئيسية</option><option value="false">في القسم فقط</option></select><small>المنتج في القسم فقط لا يظهر ضمن مختارات الرئيسية. خيار «ظاهر في المتجر» يتحكم في إخفائه بالكامل.</small></div><div class="field full rating-editor"><label><input id="ratingEnabled" type="checkbox"> إظهار تقييم المتجر</label><div class="field"><label for="ratingStars">عدد النجوم</label><select id="ratingStars"><option value="0.5" >0.5 / 5</option><option value="1" >1 / 5</option><option value="1.5" >1.5 / 5</option><option value="2" >2 / 5</option><option value="2.5" >2.5 / 5</option><option value="3" >3 / 5</option><option value="3.5" >3.5 / 5</option><option value="4" >4 / 5</option><option value="4.5" >4.5 / 5</option><option value="5" selected>5 / 5</option></select></div><div class="field"><label for="ratingText">نص التقييم (اختياري)</label><textarea id="ratingText" maxlength="400" placeholder="رأي المتجر في القطعة"></textarea></div><small>يظهر للعميل باسم «تقييم المتجر». لإزالته، ألغِ علامة الإظهار واحفظ المنتج.</small></div><div class="field"><label>الخامة</label><input id="material" maxlength="120" value="Sterling Silver"></div>
               <div class="field full"><label>المقاسات</label><input id="sizes" maxlength="300" placeholder="17, 18, 19 أو 45 cm, 50 cm"><small>افصل المقاسات بفاصلة.</small></div>
               <div class="field full">
@@ -62,6 +62,6 @@
       </main>
     </div>
   </section>
-  <script type="module" src="admin.js?v=3"></script>
+  <script type="module" src="admin.js?v=4"></script>
 </body>
 </html>

@@ -4,7 +4,7 @@ service cloud.firestore {
     function signedIn() { return request.auth != null; }
     function adminDoc() { return /databases/$(database)/documents/users/$(request.auth.uid); }
     function isAdmin() { return signedIn() && exists(adminDoc()) && get(adminDoc()).data.role == 'admin'; }
-    function validCategory(v) { return v in ['rings','chains','bracelets','accessories']; }
+    function validCategory(v) { return v in ['rings','chains','bracelets','accessories','men-ring','men-band','men-bracelet','men-chain','women-chain','women-bracelet','women-ring','women-earrings','women-anklet','stainless','tungsten']; }
 
     function validImage(v) { return v is string && v.size() > 0 && v.size() <= 1500 && v.matches('https://[^\\s]+'); }
     function validImages(v) { return v is list && v.size() >= 1 && v.size() <= 8
