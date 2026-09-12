@@ -10,7 +10,7 @@ let auth,db,products=[],loginAttempts=0,lockUntil=0;
 function showStatus(target,text,type=''){const n=$(target);if(!n)return;n.textContent=text;n.className=`status ${type}`.trim();}
 function safeUrl(url){try{if(url?.startsWith('assets/'))return url;const u=new URL(url,location.href);return u.protocol==='https:'||u.origin===location.origin?u.href:'assets/logo.png'}catch{return 'assets/logo.png'}}
 function productImages(p){const a=Array.isArray(p.images)?p.images.filter(Boolean):[];if(!a.length&&p.image)a.push(p.image);return a;}
-function parseImageUrls(){const raw=$('#imageUrls').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);const unique=[...new Set(raw)].slice(0,8);for(const url of unique){try{const u=new URL(url);if(u.protocol!=='https:')throw new Error();}catch{throw new Error('كل رابط صورة يجب أن يبدأ بـ https://');}}if(!unique.length)throw new Error('أضف رابط صورة واحد على الأقل.');return unique;}
+function parseImageUrls(){const raw=$('#imageUrls').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);const unique=[...new Set(raw)];if(unique.length>8)throw new Error('الحد الأقصى 8 صور؛ احذف الروابط الزائدة.');for(const url of unique){try{const u=new URL(url);if(u.protocol!=='https:')throw new Error();}catch{throw new Error('كل رابط صورة يجب أن يبدأ بـ https://');}}if(!unique.length)throw new Error('أضف رابط صورة واحد على الأقل.');return unique;}
 function renderImagePreview(){const box=$('#imagePreview');box.replaceChildren();const urls=$('#imageUrls').value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,8);urls.forEach((url,i)=>{const wrap=el('div','preview-thumb');const img=document.createElement('img');img.src=safeUrl(url);img.alt='';img.onerror=()=>wrap.remove();wrap.append(img,el('span','',i===0?'الرئيسية':String(i+1)));box.append(wrap);});}
 
 if(configured){const app=initializeApp(firebaseConfig);if(storeSettings.appCheckSiteKey)initializeAppCheck(app,{provider:new ReCaptchaV3Provider(storeSettings.appCheckSiteKey),isTokenAutoRefreshEnabled:true});auth=getAuth(app);db=getFirestore(app);setPersistence(auth,browserSessionPersistence).catch(()=>{});}else showStatus('#loginStatus','أضف بيانات Firebase داخل firebase-config.js أولاً.','error');
@@ -20,7 +20,60 @@ async function loadProducts(){try{const snap=await getDocs(query(collection(db,'
 function renderList(){const wrap=$('#adminProducts'),q=$('#adminSearch').value.trim().toLowerCase();wrap.replaceChildren();const list=products.filter(p=>`${p.nameAr||''} ${p.nameEn||''} ${p.sku||''}`.toLowerCase().includes(q));if(!list.length){wrap.append(el('div','empty-state','لا توجد منتجات مطابقة.'));return}for(const p of list){const row=el('div','admin-product');const img=document.createElement('img');img.src=safeUrl(productImages(p)[0]||'assets/logo.png');img.alt='';const body=el('div','');body.append(el('h4','',p.nameAr||p.nameEn||'بدون اسم'));body.append(el('small','',`${Number(p.price||0).toLocaleString()} EGP · ${Number(p.weight||0).toLocaleString()} g · عيار ${p.karat||'925'} · ${productImages(p).length} صور · مخزون ${Number(p.stock||0)} · ${p.active===false?'مخفي':'ظاهر'}`));const actions=el('div','admin-actions');const edit=el('button','small-btn','تعديل');edit.type='button';edit.onclick=()=>editProduct(p.id);const del=el('button','small-btn danger','حذف');del.type='button';del.onclick=()=>removeProduct(p.id);actions.append(edit,del);row.append(img,body,actions);wrap.append(row)}}
 function editProduct(id){const p=products.find(x=>x.id===id);if(!p)return;$('#productId').value=id;for(const k of ['nameAr','nameEn','descAr','descEn','price','oldPrice','stock','sku','material','weight','karat'])$('#'+k).value=p[k]??'';$('#sizes').value=Array.isArray(p.sizes)?p.sizes.join(', '):'';$('#category').value=p.category||'rings';$('#imageUrls').value=productImages(p).join('\n');for(const k of ['featured','isNew','onSale','active'])$('#'+k).checked=!!p[k];$('#formTitle').textContent='تعديل المنتج';$('#cancelEdit').classList.add('show');renderImagePreview();window.scrollTo({top:0,behavior:'smooth'});}
 function resetForm(){$('#productForm').reset();$('#productId').value='';$('#stock').value='1';$('#weight').value='0';$('#material').value='Sterling Silver';$('#karat').value='925';$('#active').checked=true;$('#formTitle').textContent='إضافة منتج';$('#cancelEdit').classList.remove('show');$('#imagePreview').replaceChildren();}
-async function saveProduct(e){e.preventDefault();try{const id=$('#productId').value;const images=parseImageUrls();const sizes=$('#sizes').value.split(',').map(x=>x.trim()).filter(Boolean).slice(0,30);const price=Number($('#price').value||0),oldPrice=Number($('#oldPrice').value||0),stock=Math.floor(Number($('#stock').value||0)),weight=Number($('#weight').value||0);const data={nameAr:$('#nameAr').value.trim(),nameEn:$('#nameEn').value.trim(),descAr:$('#descAr').value.trim(),descEn:$('#descEn').value.trim(),price,oldPrice,category:$('#category').value,image:images[0],images,featured:$('#featured').checked,isNew:$('#isNew').checked,onSale:$('#onSale').checked,active:$('#active').checked,stock,sku:$('#sku').value.trim(),material:$('#material').value.trim(),karat:$('#karat').value.trim(),sizes,weight,updatedAt:serverTimestamp()};if(!data.nameAr||!data.nameEn)throw new Error('اسم المنتج مطلوب بالعربي والإنجليزي.');if(!/^[0-9A-Za-z .-]{1,20}$/.test(data.karat))throw new Error('العيار غير صالح. مثال: 925');if(data.oldPrice>0&&data.oldPrice<data.price)throw new Error('السعر قبل الخصم يجب ألا يكون أقل من السعر الحالي.');if(stock<0||!Number.isFinite(weight)||weight<0)throw new Error('راجع المخزون والوزن.');if(id)await updateDoc(doc(db,'products',id),data);else await addDoc(collection(db,'products'),{...data,createdAt:serverTimestamp()});showStatus('#formStatus','تم حفظ المنتج بنجاح.','success');resetForm();await loadProducts();}catch(err){console.error(err);showStatus('#formStatus',`خطأ: ${err.message}`,'error')}}
+const PRODUCT_FIELDS=['nameAr','nameEn','descAr','descEn','price','oldPrice','category','image','images','featured','isNew','onSale','active','stock','sku','material','karat','sizes','weight','createdAt','updatedAt'];
+function validateProductData(d){
+  const limits={nameAr:120,nameEn:120,descAr:1200,descEn:1200,sku:80,material:120,karat:20,image:1500};
+  const names={nameAr:'الاسم العربي',nameEn:'الاسم الإنجليزي',descAr:'الوصف العربي',descEn:'الوصف الإنجليزي',sku:'كود المنتج',material:'الخامة',karat:'العيار',image:'رابط الصورة الرئيسية'};
+  for(const [key,max] of Object.entries(limits)){
+    if(typeof d[key]!=='string'||d[key].length>max)throw new Error(names[key]+' يجب ألا يتجاوز '+max+' حرفًا.');
+    if(['nameAr','nameEn','karat','image'].includes(key)&&!d[key].trim())throw new Error(names[key]+' مطلوب.');
+  }
+  for(const [key,max,title] of [['price',10000000,'السعر'],['oldPrice',10000000,'السعر قبل الخصم'],['weight',100000,'الوزن'],['stock',100000,'المخزون']]){
+    if(!Number.isFinite(d[key])||d[key]<0||d[key]>max)throw new Error(title+' يجب أن يكون بين 0 و'+max+'.');
+  }
+  if(!Number.isInteger(d.stock))throw new Error('المخزون يجب أن يكون عددًا صحيحًا.');
+  if(d.oldPrice!==0&&d.oldPrice<d.price)throw new Error('السعر قبل الخصم يجب أن يساوي السعر الحالي أو يزيد عنه، أو يكون صفرًا.');
+  if(!['rings','chains','bracelets','accessories'].includes(d.category))throw new Error('اختر تصنيف المنتج من القائمة.');
+  if(!Array.isArray(d.images)||d.images.length<1||d.images.length>8)throw new Error('أضف من 1 إلى 8 صور.');
+  if(!Array.isArray(d.sizes)||d.sizes.length>30)throw new Error('الحد الأقصى 30 مقاسًا.');
+  for(const key of ['featured','isNew','onSale','active'])if(typeof d[key]!=='boolean')throw new Error('راجع اختيارات ظهور المنتج.');
+}
+async function saveProduct(e){
+  e.preventDefault();const button=$('#productForm button[type="submit"]');if(button.disabled)return;
+  button.disabled=true;let stage='validation';
+  try{
+    const id=$('#productId').value.trim();
+    const images=parseImageUrls();
+    const sizes=$('#sizes').value.split(/[,،]/).map(x=>x.trim()).filter(Boolean);
+    const data={};
+    for(const key of ['nameAr','nameEn','descAr','descEn','sku','material','karat'])data[key]=$('#'+key).value.trim();
+    for(const key of ['price','oldPrice','stock','weight'])data[key]=Number($('#'+key).value||0);
+    for(const key of ['featured','isNew','onSale','active'])data[key]=$('#'+key).checked;
+    Object.assign(data,{category:$('#category').value,image:images[0],images,sizes,updatedAt:serverTimestamp()});
+    validateProductData(data);
+    showStatus('#formStatus','جاري التحقق والحفظ…');
+    stage='session';const user=auth?.currentUser;
+    if(!user)throw new Error('انتهت جلسة الدخول. سجّل الخروج وادخل من جديد.');
+    await user.getIdToken(true);
+    stage='role';if(!await isAdmin(user.uid))throw new Error('الحساب الحالي لا يملك صلاحية admin في مشروع '+firebaseConfig.projectId+'.');
+    if(id){
+      stage='existing';const snap=await getDoc(doc(db,'products',id));
+      if(!snap.exists())throw new Error('المنتج المطلوب تعديله لم يعد موجودًا. اضغط إلغاء التعديل ثم أضفه كمنتج جديد.');
+      const existing=snap.data();const extra=Object.keys(existing).filter(k=>!PRODUCT_FIELDS.includes(k));
+      if(extra.length)throw new Error('المنتج القديم يحتوي حقولًا لا تسمح بها القواعد: '+extra.join(', ')+'. لم يتم حذفها. أرسل هذه الرسالة لمراجعة ترحيل بيانات المنتج.');
+      if(!existing.createdAt||typeof existing.createdAt.toDate!=='function')throw new Error('حقل createdAt في المنتج القديم ليس Timestamp صالحًا. يلزم تصحيح تاريخ إنشاء هذا المنتج في Firebase.');
+      stage='write-update';await updateDoc(doc(db,'products',id),data);
+    }else{
+      stage='write-create';await addDoc(collection(db,'products'),{...data,createdAt:serverTimestamp()});
+    }
+    resetForm();showStatus('#formStatus','تم حفظ المنتج بنجاح.','success');await loadProducts();
+  }catch(err){
+    console.error('Product save failed',stage,err);
+    const denied=String(err.code||'').includes('permission-denied');
+    const message=denied?(stage.startsWith('write-')?'Firebase رفض الكتابة رغم نجاح فحص البيانات والتحقق من صلاحية الأدمن. أرسل هذه الرسالة مع صورة بيانات النموذج كاملة.':'Firebase رفض خطوة التحقق من الحساب أو المنتج. سجّل الدخول مجددًا وتأكد من صلاحيات الحساب.'):(err.message||'تعذر حفظ المنتج.');
+    showStatus('#formStatus',message+' [SAVE-2 / '+stage+' / '+(err.code||'validation')+' / '+firebaseConfig.projectId+']','error');
+  }finally{button.disabled=false;}
+}
 async function removeProduct(id){const p=products.find(x=>x.id===id);if(!confirm(`متأكد من حذف ${p?.nameAr||'المنتج'}؟`))return;try{await deleteDoc(doc(db,'products',id));await loadProducts();}catch(err){alert('تعذر الحذف: '+err.message)}}
 async function logout(){if(auth)await signOut(auth);}
 
