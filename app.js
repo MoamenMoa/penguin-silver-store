@@ -106,7 +106,7 @@ function openModal(sel){const m=$(sel);m.classList.add('open');m.setAttribute('a
 function closeModal(sel){const m=$(sel);m.classList.remove('open');m.setAttribute('aria-hidden','true');document.body.classList.remove('no-scroll');}
 
 function checkoutMessage(data){
-  const lines=[lang==='ar'?'طلب جديد من متجر فضيات البطريق':'New order from Penguin Silver',''];let total=0;
+  const lines=[lang==='ar'?'طلب جديد من متجر فضيات البطريق':'New order from Elbtrik',''];let total=0;
   cart.forEach((item,idx)=>{const p=products.find(x=>x.id===item.id);if(!p)return;const line=Number(p.price||0)*item.qty;total+=line;lines.push(`${idx+1}) ${label(p,'name')} × ${item.qty}${item.color?` · ${lang==='ar'?'اللون':'Color'}: ${item.color}`:''}${item.size?` | ${T[lang].size}: ${item.size}`:''} | ${T[lang].weight}: ${weightText(p)} | ${T[lang].karat}: ${purity(p)} | ${money(line)}`)});
   const payment=data.payment==='cash-wallet'?`محفظة كاش: ${storeSettings.cashWalletNumber}`:'الدفع عند الاستلام'; lines.push('',`إجمالي المنتجات (الشحن غير مشمول): ${money(total)}`,`الاسم: ${data.name}`,`الهاتف: ${data.phone}`,`المحافظة: ${data.gov}`,`العنوان: ${data.address}`,`الدفع: ${payment}`);if(data.notes)lines.push(`ملاحظات: ${data.notes}`);return lines.join('\n');
 }
