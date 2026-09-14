@@ -1,3 +1,4 @@
+import {colorsOf} from './colors.js';
 export const defaults = Object.freeze({
   announcementEnabled:true,
   announcementText:'أقوى عروض وتخفيضات تصل لـ30% بمناسبة افتتاح فضيات البطريق',
@@ -31,8 +32,9 @@ export function reconcileCart(items,products){
     const size=typeof item.size==='string'?item.size:'';const sizes=Array.isArray(p.sizes)?p.sizes:[];
     if(sizes.length&&!sizes.includes(size))continue;
     const qty=Math.min(Math.max(0,Math.floor(Number(item.qty)||0)),remaining.get(p.id));if(!qty)continue;
-    const key=p.id+'::'+size;const existing=result.find(i=>i.key===key);
-    if(existing)existing.qty+=qty;else result.push({id:p.id,key,size,qty});remaining.set(p.id,remaining.get(p.id)-qty);
+    const colors=colorsOf(p);const color=typeof item.color==='string'?item.color:'';if(colors.length&&!colors.some(c=>c.name===color))continue;if(!colors.length&&color)continue;
+    const key=JSON.stringify([p.id,size,color]);const existing=result.find(i=>i.key===key);
+    if(existing)existing.qty+=qty;else result.push({id:p.id,key,size,color,qty});remaining.set(p.id,remaining.get(p.id)-qty);
   }
   return result;
 }
