@@ -1,3 +1,4 @@
+import {setCollections,updateCollectionProducts} from './collections.js';
 import {departments,matchesCategory} from './categories.js';
 import {saleBadge,ratingNode,discountPercent} from './product-decor.js';
 import {safeImage,localRead,localWrite,reconcileCart} from './content.js';
@@ -33,7 +34,7 @@ function persistCart(){ localWrite('penguinCart',JSON.stringify(cart)); }
 function applyLang(){
   document.documentElement.lang=lang; document.documentElement.dir=lang==='ar'?'rtl':'ltr'; $('#langBtn').textContent=lang==='ar'?'EN':'AR';
   $$('[data-i18n]').forEach(n=>{const k=n.dataset.i18n;if(T[lang][k]){if(k==='heroTitle'){const [a,b]=T[lang][k].split('|');n.innerHTML='';n.append(document.createTextNode(a),document.createElement('br'));const m=document.createElement('mark');m.textContent=b;n.append(m);}else n.textContent=T[lang][k];}});
-  renderCategoryNavigation();renderProducts(); renderCart();updateShowcase(products,lang,openProduct);
+  renderCategoryNavigation();renderProducts(); renderCart();updateShowcase(products,lang,openProduct);updateCollectionProducts(products,lang,openProduct);
 }
 
 function filteredProducts(){
@@ -107,7 +108,7 @@ function checkoutMessage(data){
 }
 
 async function loadFirebaseProducts(){
-  if(!configured){loading=false;loadFailed=true;renderProducts();return;} try{const app=initializeApp(firebaseConfig);if(storeSettings.appCheckSiteKey)initializeAppCheck(app,{provider:new ReCaptchaV3Provider(storeSettings.appCheckSiteKey),isTokenAutoRefreshEnabled:true});const db=getFirestore(app);storeDb=db;loadBranding(db);getDoc(doc(db,'settings','content')).then(s=>{if(s.exists())applyContent(s.data());}).catch(()=>{});const snap=await getDocs(query(collection(db,'products'),where('active','==',true)));products=snap.docs.map(d=>({...d.data(),id:d.id})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));cart=cart.filter(i=>products.some(p=>p.id===i.id&&Number(p.stock)>0));loading=false;loadFailed=false;renderProducts();renderCart();updateShowcase(products,lang,openProduct);}catch(err){loading=false;loadFailed=true;renderProducts();console.error('Firebase load failed',err);$('#loadingProducts').textContent='تعذر تحميل المنتجات. حاول مرة أخرى.';}
+  if(!configured){loading=false;loadFailed=true;renderProducts();return;} try{const app=initializeApp(firebaseConfig);if(storeSettings.appCheckSiteKey)initializeAppCheck(app,{provider:new ReCaptchaV3Provider(storeSettings.appCheckSiteKey),isTokenAutoRefreshEnabled:true});const db=getFirestore(app);storeDb=db;loadBranding(db);getDoc(doc(db,'settings','collections')).then(s=>{if(s.exists())setCollections(s.data());}).catch(()=>{});getDoc(doc(db,'settings','content')).then(s=>{if(s.exists())applyContent(s.data());}).catch(()=>{});const snap=await getDocs(query(collection(db,'products'),where('active','==',true)));products=snap.docs.map(d=>({...d.data(),id:d.id})).sort((a,b)=>(b.createdAt?.seconds||0)-(a.createdAt?.seconds||0));cart=cart.filter(i=>products.some(p=>p.id===i.id&&Number(p.stock)>0));loading=false;loadFailed=false;renderProducts();renderCart();updateShowcase(products,lang,openProduct);updateCollectionProducts(products,lang,openProduct);}catch(err){loading=false;loadFailed=true;renderProducts();console.error('Firebase load failed',err);$('#loadingProducts').textContent='تعذر تحميل المنتجات. حاول مرة أخرى.';}
 }
 
 $('#langBtn').onclick=()=>{lang=lang==='ar'?'en':'ar';localWrite('lang',lang);applyLang();};
@@ -123,7 +124,7 @@ $$('[data-department]').forEach(b=>b.onclick=()=>{category=b.dataset.department;
 $('#checkoutBtn').onclick=async()=>{
   const button=$('#checkoutBtn');button.disabled=true;$('#cartStatus').textContent='جاري مراجعة الأسعار والمخزون…';
   try{if(!storeDb)throw Error();const old=JSON.stringify(cart.map(i=>[i.id,i.size,i.qty,products.find(p=>p.id===i.id)?.price]));
-    const snap=await getDocs(query(collection(storeDb,'products'),where('active','==',true)));products=snap.docs.map(d=>({...d.data(),id:d.id}));cart=reconcileCart(cart,products);renderProducts();renderCart();updateShowcase(products,lang,openProduct);
+    const snap=await getDocs(query(collection(storeDb,'products'),where('active','==',true)));products=snap.docs.map(d=>({...d.data(),id:d.id}));cart=reconcileCart(cart,products);renderProducts();renderCart();updateShowcase(products,lang,openProduct);updateCollectionProducts(products,lang,openProduct);
     const current=JSON.stringify(cart.map(i=>[i.id,i.size,i.qty,products.find(p=>p.id===i.id)?.price]));
     if(old!==current){$('#cartStatus').textContent='تغيّر سعر أو توافر بعض القطع. راجع السلة واضغط استكمال الطلب مرة أخرى.';return;}
     if(!cart.length)return;$('#cartStatus').textContent='';closeCart();openModal('#checkoutModal');

@@ -105,6 +105,31 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    function validCollection(c) {
+      let ids = c.productIds;
+      let joined = ids.join(',');
+      return c.keys().hasOnly(['id','title','enabled','mode','productIds'])
+        && c.id is string && c.id.matches('[A-Za-z0-9_-]{1,80}')
+        && c.title is string && c.title.size() > 0 && c.title.size() <= 100
+        && c.enabled is bool && c.mode in ['manual','left','right']
+        && ids is list && ids.size() <= 12 && ids.toSet().size() == ids.size()
+        && (ids.size() == 0 || (ids == joined.split(',') && joined.matches('[A-Za-z0-9_-]{1,128}(,[A-Za-z0-9_-]{1,128}){0,11}')));
+    }
+    match /settings/collections {
+      allow read: if true;
+      allow create, update: if isAdmin()
+        && request.resource.data.keys().hasOnly(['items','updatedAt'])
+        && request.resource.data.updatedAt == request.time
+        && request.resource.data.items is list && request.resource.data.items.size() <= 6
+        && (request.resource.data.items.size() <= 0 || validCollection(request.resource.data.items[0]))
+        && (request.resource.data.items.size() <= 1 || validCollection(request.resource.data.items[1]))
+        && (request.resource.data.items.size() <= 2 || validCollection(request.resource.data.items[2]))
+        && (request.resource.data.items.size() <= 3 || validCollection(request.resource.data.items[3]))
+        && (request.resource.data.items.size() <= 4 || validCollection(request.resource.data.items[4]))
+        && (request.resource.data.items.size() <= 5 || validCollection(request.resource.data.items[5]));
+      allow delete: if false;
+    }
+
     match /users/{userId} {
       allow read: if signedIn() && request.auth.uid == userId;
       allow create, update, delete: if false;

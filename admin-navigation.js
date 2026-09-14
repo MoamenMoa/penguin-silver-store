@@ -1,0 +1,8 @@
+const main=document.querySelector('.admin-main');
+const tabs=document.createElement('div');tabs.className='admin-tabs';tabs.setAttribute('role','tablist');tabs.setAttribute('aria-label','أقسام لوحة الإدارة');
+const config=[['products','المنتجات والأقسام','.admin-grid'],['branding','اللوجو والهيدر','.settings-panel'],['content','العروض والسياسات','.content-panel'],['collections','الكولكشنات','#collectionsPanel']];
+const entries=[];
+for(const [id,title,selector] of config){const panel=document.querySelector(selector);if(!panel)continue;const tab=document.createElement('button');tab.type='button';tab.id='tab-'+id;tab.textContent=title;tab.setAttribute('role','tab');panel.id='panel-'+id;panel.setAttribute('role','tabpanel');panel.setAttribute('aria-labelledby',tab.id);tab.setAttribute('aria-controls',panel.id);tab.onclick=()=>show(id);tabs.append(tab);entries.push({id,tab,panel});}
+function show(id){for(const e of entries){const active=e.id===id;e.panel.hidden=!active;e.tab.setAttribute('aria-selected',String(active));e.tab.tabIndex=active?0:-1;} }
+tabs.addEventListener('keydown',e=>{const index=entries.findIndex(x=>x.tab===document.activeElement);if(index<0)return;let next;if(e.key==='ArrowRight')next=(index+entries.length-1)%entries.length;else if(e.key==='ArrowLeft')next=(index+1)%entries.length;else if(e.key==='Home')next=0;else if(e.key==='End')next=entries.length-1;else return;e.preventDefault();show(entries[next].id);entries[next].tab.focus();});
+main.querySelector('.admin-top').after(tabs);document.querySelector('.side-nav button:first-child').onclick=()=>show('products');show('products');
