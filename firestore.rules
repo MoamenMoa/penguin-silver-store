@@ -31,7 +31,7 @@ service cloud.firestore {
       return d.keys().hasOnly([
         'nameAr','nameEn','descAr','descEn','price','oldPrice','category','image','images',
         'featured','isNew','onSale','active','stock','sku','material','karat','sizes',
-        'weight','createdAt','updatedAt','showOnHome','ratingEnabled','ratingStars','ratingText','colors'
+        'weight','createdAt','updatedAt','sortOrder','showOnHome','ratingEnabled','ratingStars','ratingText','colors'
       ])
       && d.nameAr is string && d.nameAr.size() > 0 && d.nameAr.size() <= 120
       && d.nameEn is string && d.nameEn.size() > 0 && d.nameEn.size() <= 120
@@ -52,6 +52,7 @@ service cloud.firestore {
       && d.weight is number && d.weight >= 0 && d.weight <= 100000
       && d.createdAt is timestamp
       && d.updatedAt is timestamp
+      && d.get('sortOrder', 0) is int && d.get('sortOrder', 0) >= 0 && d.get('sortOrder', 0) <= 100000
       && d.get('showOnHome', true) is bool
       && d.get('ratingEnabled', false) is bool
       && d.get('ratingStars', 0) is number && d.get('ratingStars', 0) >= 0 && d.get('ratingStars', 0) <= 5
