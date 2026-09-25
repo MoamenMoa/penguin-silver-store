@@ -17,6 +17,8 @@ function decodeDoc(doc) {
   return Object.fromEntries(Object.entries(doc.fields || {}).map(([k,v]) => [k,value(v)]));
 }
 function inject(html, meta) {
+  // Product URLs are nested (/product/:id), so force relative assets to resolve from the site root.
+  if (!/<base\s/i.test(html)) html = html.replace(/<head>/i, '<head><base href="/">');
   const tags = `\n<!-- Dynamic Facebook / Open Graph product preview -->\n`+
     `<meta property="og:type" content="product">\n`+
     `<meta property="og:site_name" content="فضيات البطريق">\n`+
